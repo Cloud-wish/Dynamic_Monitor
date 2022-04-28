@@ -385,6 +385,7 @@ async def GetLiveStatus(uid):
             f.close()
     except Exception as err:
         print(f"UID:{uid} 第一次查询")
+        os.makedirs("Live", exist_ok=True)
         f = open(cur_path + 'Live/' + str(uid)+'Live','w')
         f.write(now_live_status)
         f.close()
@@ -866,11 +867,12 @@ def UpdateUserDesc(uid, wb_name, user_desc):
             last_user_desc = f.read()
             f.close()
     except Exception as err:
-            with open(str(uid)+'WeiboDesc','w', encoding='UTF-8') as f:
-                f.write(user_desc)
-                f.close()
-            print(f"已创建UID{uid}的微博简介")
-            return
+        os.makedirs("WeiboDesc", exist_ok=True)
+        with open(cur_path + 'WeiboDesc/' + str(uid)+'WeiboDesc','w', encoding='UTF-8') as f:
+            f.write(user_desc)
+            f.close()
+        print(f"已创建UID{uid}的微博简介")
+        return
     if (user_desc != last_user_desc):
         content = [wb_name + '把简介从\n' + last_user_desc + '\n' + '改成了\n' + user_desc]
         try:
@@ -878,7 +880,7 @@ def UpdateUserDesc(uid, wb_name, user_desc):
                 f.write(user_desc)
                 f.close()
         except Exception as err:
-                pass
+            pass
         for ch in pushwbConfigDict.get(uid, []):
             put_guild_channel_msg(ch[0], ch[1], content)
 
