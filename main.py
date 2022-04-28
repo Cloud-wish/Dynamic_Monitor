@@ -40,7 +40,7 @@ PUSHHELP = """
 """
 
 # 微软雅黑的字体
-path_to_ttf = 'font/msyh.ttc'
+path_to_ttf = f'font{os.sep}msyh.ttc'
 font = ImageFont.truetype(path_to_ttf, size=16, encoding='unic')
 cur_path=os.path.dirname(__file__)
 cur_path=os.path.split(os.path.realpath(__file__))[0]
@@ -49,6 +49,7 @@ if(cur_path[-1] != os.sep):
 sys_str = platform.system()
 
 BOT_ID = "xxx" # 此处填写字符串格式的BOT ID
+ALLOWED_GUILD = ['xxx', 'xxx'] # 此处填写字符串格式的频道ID，代表启用推送功能的频道
 
 wb_cookie = ''
 wb_ua = ''
@@ -142,8 +143,6 @@ def loadConfig():
         last_comment_time_dict[wbuid] = datetime.now()
     for dynuid in dyn_uid_set:
         last_dynamic_time_dict[dynuid] = datetime.now()
-
-loadConfig()
 
 async def saveConfig():
     f = open(f"config{os.sep}pushwbConfig.conf","w",encoding="UTF-8")
@@ -935,155 +934,155 @@ async def dispatcher(websocket, path):
         msg_data = json.loads(message)
         if(msg_data.get('post_type', "") == 'message' and msg_data.get('message_type', "") == 'guild' and msg_data.get('sub_type', "") == 'channel'):
             # 频道消息
-            content = msg_data['message'].rstrip()
-            if(content.startswith(f'[CQ:at,qq={BOT_ID}]')):
-                print(msg_data)
-                # 是at bot的消息
-                content = content.replace(f'[CQ:at,qq={BOT_ID}]', '').lstrip()
-                reply = [msg_data['sender']['nickname']+" "]
-                ch = (msg_data['guild_id'], msg_data['channel_id'])
-                print(f"来自频道{ch[0]}的子频道{ch[1]}的{msg_data['sender']['nickname']}的消息：{content}")
-                if(content.startswith("/添加微博推送")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        para_list = content.split()
-                        try:
-                            int(para_list[1])
-                            global pushwbConfigDict
-                            if(not (para_list[1] in pushwbConfigDict)):
-                                pushwbConfigDict[para_list[1]] = set()
-                                global wb_uid_set
-                                wb_uid_set.add(para_list[1])
-                                global last_weibo_time_dict, last_comment_time_dict
-                                last_weibo_time_dict[para_list[1]] = datetime.now()
-                                last_comment_time_dict[para_list[1]] = datetime.now()
-                                await WeiboFollow(para_list[1])
-                            pushwbConfigDict[para_list[1]].add(ch)
-                            reply.append(f"已添加UID为{para_list[1]}的微博推送")
-                            await saveConfig()
-                        except Exception as e:
-                            print(repr(e))
-                            reply.append("参数错误！")
-                elif(content.startswith("/添加直播推送")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        para_list = content.split()
-                        try:
-                            int(para_list[1])
-                            global pushliveConfigDict
-                            if(not (para_list[1] in pushliveConfigDict)):
-                                pushliveConfigDict[para_list[1]] = set()
-                                global live_uid_set
-                                live_uid_set.add(para_list[1])
-                            pushliveConfigDict[para_list[1]].add(ch)
-                            reply.append(f"已添加UID为{para_list[1]}的直播推送")
-                            await saveConfig()
-                        except Exception as e:
-                            print(repr(e))
-                            reply.append("参数错误！")
-                elif(content.startswith("/添加动态推送")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        para_list = content.split()
-                        try:
-                            int(para_list[1])
-                            global pushdynConfigDict
-                            if(not (para_list[1] in pushdynConfigDict)):
-                                pushdynConfigDict[para_list[1]] = set()
-                                global dyn_uid_set
-                                dyn_uid_set.add(para_list[1])
-                                global last_dynamic_time_dict
-                                last_dynamic_time_dict[para_list[1]] = datetime.now()
-                            pushdynConfigDict[para_list[1]].add(ch)
-                            reply.append(f"已添加UID为{para_list[1]}的动态推送")
-                            await saveConfig()
-                        except Exception as e:
-                            print(repr(e))
-                            reply.append("参数错误！")
-                elif(content.startswith("/删除微博推送")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        para_list = content.split()
-                        try:
-                            int(para_list[1])
-                            # global pushwbConfigDict
-                            if(para_list[1] in pushwbConfigDict):
-                                try:
-                                    pushwbConfigDict[para_list[1]].remove(ch)
-                                    if(len(pushwbConfigDict[para_list[1]]) == 0):
-                                        # global wb_uid_set
-                                        wb_uid_set.remove(para_list[1])
-                                        pushwbConfigDict.pop(para_list[1])
-                                    reply.append(f"已删除UID为{para_list[1]}的微博推送")
-                                    await saveConfig()
-                                except KeyError:
+            if(msg_data['guild_id'] in ALLOWED_GUILD):
+                content = msg_data['message'].rstrip()
+                if(content.startswith(f'[CQ:at,qq={BOT_ID}]')):
+                    # 是at bot的消息
+                    content = content.replace(f'[CQ:at,qq={BOT_ID}]', '').lstrip()
+                    reply = [msg_data['sender']['nickname']+" "]
+                    ch = (msg_data['guild_id'], msg_data['channel_id'])
+                    print(f"来自频道{ch[0]}的子频道{ch[1]}的{msg_data['sender']['nickname']}的消息：{content}")
+                    if(content.startswith("/添加微博推送")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            para_list = content.split()
+                            try:
+                                int(para_list[1])
+                                global pushwbConfigDict
+                                if(not (para_list[1] in pushwbConfigDict)):
+                                    pushwbConfigDict[para_list[1]] = set()
+                                    global wb_uid_set
+                                    wb_uid_set.add(para_list[1])
+                                    global last_weibo_time_dict, last_comment_time_dict
+                                    last_weibo_time_dict[para_list[1]] = datetime.now()
+                                    last_comment_time_dict[para_list[1]] = datetime.now()
+                                    await WeiboFollow(para_list[1])
+                                pushwbConfigDict[para_list[1]].add(ch)
+                                reply.append(f"已添加UID为{para_list[1]}的微博推送")
+                                await saveConfig()
+                            except Exception as e:
+                                print(repr(e))
+                                reply.append("参数错误！")
+                    elif(content.startswith("/添加直播推送")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            para_list = content.split()
+                            try:
+                                int(para_list[1])
+                                global pushliveConfigDict
+                                if(not (para_list[1] in pushliveConfigDict)):
+                                    pushliveConfigDict[para_list[1]] = set()
+                                    global live_uid_set
+                                    live_uid_set.add(para_list[1])
+                                pushliveConfigDict[para_list[1]].add(ch)
+                                reply.append(f"已添加UID为{para_list[1]}的直播推送")
+                                await saveConfig()
+                            except Exception as e:
+                                print(repr(e))
+                                reply.append("参数错误！")
+                    elif(content.startswith("/添加动态推送")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            para_list = content.split()
+                            try:
+                                int(para_list[1])
+                                global pushdynConfigDict
+                                if(not (para_list[1] in pushdynConfigDict)):
+                                    pushdynConfigDict[para_list[1]] = set()
+                                    global dyn_uid_set
+                                    dyn_uid_set.add(para_list[1])
+                                    global last_dynamic_time_dict
+                                    last_dynamic_time_dict[para_list[1]] = datetime.now()
+                                pushdynConfigDict[para_list[1]].add(ch)
+                                reply.append(f"已添加UID为{para_list[1]}的动态推送")
+                                await saveConfig()
+                            except Exception as e:
+                                print(repr(e))
+                                reply.append("参数错误！")
+                    elif(content.startswith("/删除微博推送")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            para_list = content.split()
+                            try:
+                                int(para_list[1])
+                                # global pushwbConfigDict
+                                if(para_list[1] in pushwbConfigDict):
+                                    try:
+                                        pushwbConfigDict[para_list[1]].remove(ch)
+                                        if(len(pushwbConfigDict[para_list[1]]) == 0):
+                                            # global wb_uid_set
+                                            wb_uid_set.remove(para_list[1])
+                                            pushwbConfigDict.pop(para_list[1])
+                                        reply.append(f"已删除UID为{para_list[1]}的微博推送")
+                                        await saveConfig()
+                                    except KeyError:
+                                        reply.append(f"未添加过UID为{para_list[1]}的微博推送！")
+                                else:
                                     reply.append(f"未添加过UID为{para_list[1]}的微博推送！")
-                            else:
-                                reply.append(f"未添加过UID为{para_list[1]}的微博推送！")
-                        except Exception as e:
-                            print(repr(e))
-                            reply.append("参数错误！")
-                elif(content.startswith("/删除直播推送")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        para_list = content.split()
-                        try:
-                            int(para_list[1])
-                            # global pushliveConfigDict
-                            if(para_list[1] in pushliveConfigDict):
-                                try:
-                                    pushliveConfigDict[para_list[1]].remove(ch)
-                                    if(len(pushliveConfigDict[para_list[1]]) == 0):
-                                        # global live_uid_set
-                                        live_uid_set.remove(para_list[1])
-                                        pushliveConfigDict.pop(para_list[1])
-                                    reply.append(f"已删除UID为{para_list[1]}的直播推送")
-                                    await saveConfig()
-                                except KeyError:
-                                    reply.append(f"未添加过UID为{para_list[1]}的直播推送！")
-                            else:
-                                reply.append(f"未添加过UID为{para_list[1]}的微博推送！")
-                        except Exception as e:
-                            print(repr(e))
-                            reply.append("参数错误！")
-                elif(content.startswith("/删除动态推送")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        para_list = content.split()
-                        try:
-                            int(para_list[1])
-                            # global pushdynConfigDict
-                            if(para_list[1] in pushdynConfigDict):
-                                try:
-                                    pushdynConfigDict[para_list[1]].remove(ch)
-                                    if(len(pushdynConfigDict[para_list[1]]) == 0):
-                                        # global dyn_uid_set
-                                        dyn_uid_set.remove(para_list[1])
-                                        pushdynConfigDict.pop(para_list[1])
-                                    reply.append(f"已删除UID为{para_list[1]}的动态推送")
-                                    await saveConfig()
-                                except KeyError:
-                                    reply.append(f"未添加过UID为{para_list[1]}的动态推送！")
-                            else:
-                                reply.append(f"未添加过UID为{para_list[1]}的微博推送！")
-                        except Exception as e:
-                            print(repr(e))
-                            reply.append("参数错误！")
-                elif(content.startswith("/查询配置")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        reply.append("当前子频道开启的推送如下：\n")
-                        reply.append("微博推送：\n")
-                        for c in pushwbConfigDict.items():
-                            if(ch in c[1]):
-                                reply.append(c[0]+"\n")
-                        reply.append("直播推送：\n")
-                        for c in pushliveConfigDict.items():
-                            if(ch in c[1]):
-                                reply.append(c[0]+"\n")
-                        reply.append("动态推送：\n")
-                        for c in pushdynConfigDict.items():
-                            if(ch in c[1]):
-                                reply.append(c[0]+"\n")
-                elif(content.startswith("/推送帮助")):
-                    if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
-                        reply.append(PUSHHELP)
-                if(len(reply)>1):
-                    print(reply)
-                    put_guild_channel_msg(ch[0], ch[1], reply)
+                            except Exception as e:
+                                print(repr(e))
+                                reply.append("参数错误！")
+                    elif(content.startswith("/删除直播推送")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            para_list = content.split()
+                            try:
+                                int(para_list[1])
+                                # global pushliveConfigDict
+                                if(para_list[1] in pushliveConfigDict):
+                                    try:
+                                        pushliveConfigDict[para_list[1]].remove(ch)
+                                        if(len(pushliveConfigDict[para_list[1]]) == 0):
+                                            # global live_uid_set
+                                            live_uid_set.remove(para_list[1])
+                                            pushliveConfigDict.pop(para_list[1])
+                                        reply.append(f"已删除UID为{para_list[1]}的直播推送")
+                                        await saveConfig()
+                                    except KeyError:
+                                        reply.append(f"未添加过UID为{para_list[1]}的直播推送！")
+                                else:
+                                    reply.append(f"未添加过UID为{para_list[1]}的微博推送！")
+                            except Exception as e:
+                                print(repr(e))
+                                reply.append("参数错误！")
+                    elif(content.startswith("/删除动态推送")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            para_list = content.split()
+                            try:
+                                int(para_list[1])
+                                # global pushdynConfigDict
+                                if(para_list[1] in pushdynConfigDict):
+                                    try:
+                                        pushdynConfigDict[para_list[1]].remove(ch)
+                                        if(len(pushdynConfigDict[para_list[1]]) == 0):
+                                            # global dyn_uid_set
+                                            dyn_uid_set.remove(para_list[1])
+                                            pushdynConfigDict.pop(para_list[1])
+                                        reply.append(f"已删除UID为{para_list[1]}的动态推送")
+                                        await saveConfig()
+                                    except KeyError:
+                                        reply.append(f"未添加过UID为{para_list[1]}的动态推送！")
+                                else:
+                                    reply.append(f"未添加过UID为{para_list[1]}的微博推送！")
+                            except Exception as e:
+                                print(repr(e))
+                                reply.append("参数错误！")
+                    elif(content.startswith("/查询配置")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            reply.append("当前子频道开启的推送如下：\n")
+                            reply.append("微博推送：\n")
+                            for c in pushwbConfigDict.items():
+                                if(ch in c[1]):
+                                    reply.append(c[0]+"\n")
+                            reply.append("直播推送：\n")
+                            for c in pushliveConfigDict.items():
+                                if(ch in c[1]):
+                                    reply.append(c[0]+"\n")
+                            reply.append("动态推送：\n")
+                            for c in pushdynConfigDict.items():
+                                if(ch in c[1]):
+                                    reply.append(c[0]+"\n")
+                    elif(content.startswith("/推送帮助")):
+                        if(await getAuth(msg_data['guild_id'], msg_data['sender']['user_id'])):
+                            reply.append(PUSHHELP)
+                    if(len(reply)>1):
+                        print(reply)
+                        put_guild_channel_msg(ch[0], ch[1], reply)
 
 if __name__ == '__main__':
     read_config()
