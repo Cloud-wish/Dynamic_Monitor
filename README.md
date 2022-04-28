@@ -7,9 +7,9 @@
 ## 使用
 运行main.py即可
 ## 配置
-需要在main.py中配置Bot的QQ频道id
-B站抓取延迟在main()中可以修改，微博抓取延迟在GetWeibo()中可以修改
-注意：尽量不要修改太低以免触发反爬措施！
+- 需要在main.py中配置Bot的QQ频道id
+- B站抓取延迟在main()中可以修改，微博抓取延迟在GetWeibo()中可以修改
+- 注意：尽量不要修改太低以免触发反爬措施！
 ## 需求
 - Python 3.8 和所需要的包
 - go-cqhttp
